@@ -1,9 +1,9 @@
 version: '3'
 services:
-  mysql-server:
+  mysql-zbx-server:
     image: mysql:latest
-    container_name: mysql-server
-    hostname: mysql-server
+    container_name: mysql-zbx-server
+    hostname: mysql-zbx-server
     ports:
       - 3306:3306
     environment:
@@ -12,17 +12,19 @@ services:
       MYSQL_PASSWORD: zabbix
       MYSQL_ROOT_PASSWORD: root
     restart: always
+    volumes:
+      - zbx_database_data:/var/lib/mysql
 
   zabbix-server:
     image: zabbix/zabbix-server-mysql:latest
     container_name: zabbix-server
     hostname: zabbix-server
     depends_on:
-    - mysql-server
+    - mysql-zbx-server
     ports:
       - 10051:10051
     environment:
-      DB_SERVER_HOST: mysql-server
+      DB_SERVER_HOST: mysql-zbx-server
       MYSQL_DATABASE: zabbix
       MYSQL_USER: zabbix
       MYSQL_PASSWORD: zabbix
@@ -32,11 +34,11 @@ services:
     image: zabbix/zabbix-web-apache-mysql:latest
     container_name: zabbix-web
     depends_on:
-    - mysql-server
+    - mysql-zbx-server
     ports:
       - 8081:8080
     environment:
-      DB_SERVER_HOST: mysql-server
+      DB_SERVER_HOST: mysql-zbx-server
       MYSQL_DATABASE: zabbix
       MYSQL_USER: zabbix
       ZBX_SERVER_HOST: zabbix-server
@@ -53,6 +55,8 @@ services:
       MYSQL_PASSWORD: admin
       MYSQL_ROOT_PASSWORD: root
     restart: always
+    volumes:
+      - wp_database_data:/var/lib/mysql
 
   wordpress:
     image: wordpress
@@ -99,3 +103,7 @@ services:
       ZBX_HOSTNAME: zabbix-server
       ZBX_SERVER_HOST: zabbix-server
     init: true
+
+volumes:
+  wp_database_data: {}
+  zbx_database_data: {}
